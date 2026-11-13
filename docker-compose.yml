@@ -1,0 +1,65 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: erp_postgres
+    environment:
+      POSTGRES_DB: erp_fabrication
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  django:
+    build: .
+    container_name: erp_django
+    environment:
+      DB_NAME: erp_fabrication
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: db
+      DB_PORT: 5432
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: "False"
+    volumes:
+      - .:/app
+      - static_files:/app/staticfiles
+      - media_files:/app/media
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn erp_backend.wsgi:application --bind 0.0.0.0:8000 --workers 3"
+  react:
+    build:
+      context: /opt/erp/todolist
+      dockerfile: Dockerfile
+    container_name: erp_react
+    ports:
+      - "8080:80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.erp.rule=Host(`rgbsetup.fr`) || Host(`www.rgbsetup.fr`)"
+      - "traefik.http.routers.erp.entrypoints=websecure"
+      - "traefik.http.routers.erp.tls=true"
+      - "traefik.http.routers.erp.tls.certresolver=letsencrypt"
+      - "traefik.http.services.erp.loadbalancer.server.port=80"
+      - "traefik.http.routers.erp-http.rule=Host(`rgbsetup.fr`) || Host(`www.rgbsetup.fr`)"
+      - "traefik.http.routers.erp-http.entrypoints=web"
+    depends_on:
+      - django
+networks:
+  default:
+volumes:
+  postgres_data:
+  static_files:
+  media_files:

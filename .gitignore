@@ -1,0 +1,23 @@
+# Environnement virtuel
+erp_env/
+
+# Secrets
+.env
+.env.docker
+*.pyc
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+
+# Fichiers uploadés par les utilisateurs
+media/
+
+# Fichiers statiques collectés (régénérés par collectstatic)
+staticfiles/
+
+# Base de données locale si SQLite (ignore si tu utilises PostgreSQL)
+db.sqlite3
+
+# Éditeurs
+.vscode/
+.idea/

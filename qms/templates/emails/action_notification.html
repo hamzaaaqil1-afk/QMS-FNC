@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: Arial, sans-serif; background: #F9FAFB; margin: 0; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 32px; border: 1px solid #E2E8F0; }
+    .header { border-bottom: 2px solid #2563EB; padding-bottom: 16px; margin-bottom: 24px; }
+    .title { font-size: 20px; font-weight: 700; color: #111827; margin: 0; }
+    .subtitle { font-size: 13px; color: #6B7280; margin: 4px 0 0; }
+    .info-row { display: flex; padding: 10px 0; border-bottom: 1px solid #F1F5F9; }
+    .info-label { width: 160px; color: #64748B; font-size: 13px; flex-shrink: 0; }
+    .info-value { font-size: 13px; color: #111827; font-weight: 600; }
+    .buttons { display: flex; gap: 12px; margin-top: 28px; }
+    .btn { padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600; display: inline-block; }
+    .btn-primary { background: #2563EB; color: white; }
+    .btn-secondary { background: white; color: #2563EB; border: 2px solid #f0f0f0; }
+    .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #E2E8F0; font-size: 11px; color: #94A3B8; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <p class="title">Nouvelle action assignée</p>
+      <p class="subtitle">Defex QMS — Notification automatique</p>
+    </div>
+
+    <p style="font-size:14px; color:#374151;">Bonjour <strong>{{ responsable_nom }}</strong>,</p>
+    <p style="font-size:14px; color:#374151;">Une nouvelle action vous a été assignée :</p>
+
+    <div style="background:#F8FAFC; border-radius:8px; padding:16px; margin:16px 0;">
+      <div class="info-row">
+        <span class="info-label">Référence</span>
+        <span class="info-value">{{ action.reference }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Description</span>
+        <span class="info-value">{{ action.description }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Type</span>
+        <span class="info-value">{{ action.get_type_action_display }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Date d'échéance</span>
+        <span class="info-value" style="color:#DC2626;">{{ action.date_echeance|date:"d/m/Y" }}</span>
+      </div>
+      {% if action.fnc %}
+      <div class="info-row">
+        <span class="info-label">FNC associée</span>
+        <span class="info-value">{{ action.fnc.numero }} — {{ action.fnc.libelle }}</span>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="buttons">
+      {% if action.fnc %}
+      <a href="{{ app_url }}/qms/fnc/{{ action.fnc.id }}" class="btn btn-secondary">
+        Voir la FNC
+      </a>
+      {% endif %}
+      <a href="{{ app_url }}/qms/actions/{{ action.id }}" class="btn btn-primary">
+        Renseigner l'action
+      </a>
+    </div>
+
+    <div class="footer">
+      Cet email a été envoyé automatiquement par Defex QMS.<br>
+      Merci de ne pas répondre à cet email.
+    </div>
+  </div>
+</body>
+</html>

@@ -523,8 +523,17 @@ class ActionCorrective(models.Model):
     def est_en_retard(self):
         from datetime import date
         return self.statut == 'en_cours' and self.date_echeance < date.today()
-    
-    
+
+    @property
+    def est_verrouillee(self):
+        """
+        Une action clôturée ne doit plus être modifiée/supprimée en temps normal
+        (coûts, résultat, etc.) : le verrou est l'invariant métier ; qui peut le
+        contourner (administrateur) est une décision d'autorisation gérée dans
+        la vue, pas ici.
+        """
+        return self.statut == 'realisee'
+
 
 class CAPA(models.Model):
     STATUT_CHOICES = [

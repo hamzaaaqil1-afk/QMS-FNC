@@ -531,10 +531,35 @@ class ActionCorrectivelViewSet(TenantSiteFilterMixin, viewsets.ModelViewSet):
             return [IsAuthenticated(), require_permission('qms.voir_action')()]
         elif self.action == 'create':
             return [IsAuthenticated(), require_permission('qms.creer_action')()]
-        elif self.action in ['update', 'partial_update', 'cloturer']:
+        elif self.action == 'cloturer':
             return [IsAuthenticated(), require_permission('qms.cloturer_action')()]
+        elif self.action in ['update', 'partial_update']:
+            return [IsAuthenticated(), require_permission('qms.modifier_action')()]
+        elif self.action == 'destroy':
+            return [IsAuthenticated(), require_permission('qms.supprimer_action')()]
         return [IsAuthenticated()]
-    
+
+    def _verifier_non_verrouillee(self, obj):
+        """
+        Invariant métier : une action clôturée (statut='realisee') ne peut plus
+        être modifiée ni supprimée, sauf par un administrateur (groupe ou site).
+        """
+        from rest_framework.exceptions import ValidationError
+        profil = self.request.user.profil
+        if obj.est_verrouillee and not (profil.est_admin_groupe or profil.est_admin_site):
+            raise ValidationError({
+                'erreur': "Cette action est clôturée et ne peut plus être modifiée ou "
+                          "supprimée. Seul un administrateur peut le faire."
+            })
+
+    def perform_update(self, serializer):
+        self._verifier_non_verrouillee(serializer.instance)
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        self._verifier_non_verrouillee(instance)
+        instance.delete()
+
     def get_queryset(self):
         qs = ActionCorrective.objects.select_related('fnc', 'responsable', 'ref_cause')
         return self.filtrer_tenant_site(qs)
